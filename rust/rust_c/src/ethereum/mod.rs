@@ -593,6 +593,17 @@ pub unsafe extern "C" fn eth_parse_typed_data(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn eth_get_current_ur_path(ptr: PtrUR) -> PtrString {
+    let eth_sign_request = extract_ptr_with_type!(ptr, EthSignRequest);
+    let derivation_path: ur_registry::crypto_key_path::CryptoKeyPath =
+        eth_sign_request.get_derivation_path();
+    if let Some(path) = derivation_path.get_path() {
+        return convert_c_char(format!("m/{}", path));
+    }
+    convert_c_char("".to_string())
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn eth_ur_encode_signature(
     ptr: PtrUR,
     signature: PtrBytes,
