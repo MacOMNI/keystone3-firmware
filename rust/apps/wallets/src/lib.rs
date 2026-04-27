@@ -23,6 +23,7 @@ pub mod metamask;
 pub mod okx;
 pub mod thor_wallet;
 pub mod tonkeeper;
+pub mod hpx;
 mod utils;
 pub mod xrp_toolkit;
 pub mod zcash;

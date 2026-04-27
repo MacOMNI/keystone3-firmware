@@ -4,6 +4,7 @@ pub mod bitget;
 pub mod keplr;
 pub mod keystone_connect;
 pub mod okx;
+pub mod hyx;
 pub mod structs;
 pub mod tonkeeper;
 mod utils;
