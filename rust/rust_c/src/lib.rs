@@ -75,6 +75,8 @@ mod xrp;
 #[allow(unused)]
 mod zcash;
 
+mod hpx;
+
 #[cfg(feature = "simulator")]
 #[allow(unused)]
 mod simulator;

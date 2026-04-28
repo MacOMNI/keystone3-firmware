@@ -65,6 +65,8 @@ use ur_registry::sui::sui_sign_request::SuiSignRequest;
 use ur_registry::ton::ton_sign_request::{DataType, TonSignRequest};
 #[cfg(feature = "zcash")]
 use ur_registry::zcash::zcash_pczt::ZcashPczt;
+use ur_registry::hpx::app_call_device::HpxAppCallDevice;
+
 
 use super::ur::ViewType;
 
@@ -395,6 +397,12 @@ impl InferViewType for QRHardwareCall {
         match self.get_call_type() {
             CallType::KeyDerivation => Ok(ViewType::KeyDerivationRequest),
         }
+    }
+}
+
+impl InferViewType for HpxAppCallDevice {
+    fn infer(&self) -> Result<ViewType, URError> {
+        Ok(ViewType::ViewTypeUnKnown)
     }
 }
 

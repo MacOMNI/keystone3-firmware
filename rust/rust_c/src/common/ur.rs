@@ -71,6 +71,7 @@ use ur_registry::sui::sui_sign_request::SuiSignRequest;
 use ur_registry::ton::ton_sign_request::TonSignRequest;
 #[cfg(feature = "zcash")]
 use ur_registry::zcash::zcash_pczt::ZcashPczt;
+use ur_registry::hpx::app_call_device::HpxAppCallDevice;
 
 use super::errors::{ErrorCodes, RustCError};
 use super::free::Free;
@@ -359,6 +360,7 @@ pub enum QRCodeType {
     XmrOutputSignRequest,
     #[cfg(feature = "monero")]
     XmrTxUnsignedRequest,
+    HpxAppCallDevice,
     URTypeUnKnown,
 }
 
@@ -429,6 +431,7 @@ impl QRCodeType {
             InnerURType::AvaxSignRequest(_) => Ok(QRCodeType::AvaxSignRequest),
             #[cfg(not(feature = "btc-only"))]
             InnerURType::QRHardwareCall(_) => Ok(QRCodeType::QRHardwareCall),
+            InnerURType::HpxCallDevice(_) => Ok(QRCodeType::HpxAppCallDevice),
             _ => Err(URError::NotSupportURTypeError(value.get_type_str())),
         }
     }
@@ -784,6 +787,7 @@ pub fn decode_ur(ur: String) -> URParseResult {
         QRCodeType::AvaxSignRequest => _decode_ur::<AvaxSignRequest>(ur, ur_type),
         #[cfg(not(feature = "btc-only"))]
         QRCodeType::QRHardwareCall => _decode_ur::<QRHardwareCall>(ur, ur_type),
+        QRCodeType::HpxAppCallDevice => _decode_ur::<HpxAppCallDevice>(ur, ur_type),
         QRCodeType::URTypeUnKnown | QRCodeType::SeedSignerMessage => URParseResult::from(
             URError::NotSupportURTypeError("UnKnown ur type".to_string()),
         ),
@@ -892,6 +896,7 @@ fn receive_ur(ur: String, decoder: &mut KeystoneURDecoder) -> URParseMultiResult
         QRCodeType::XmrTxUnsignedRequest => _receive_ur::<XmrTxUnsigned>(ur, ur_type, decoder),
         #[cfg(feature = "avalanche")]
         QRCodeType::AvaxSignRequest => _receive_ur::<AvaxSignRequest>(ur, ur_type, decoder),
+        QRCodeType::HpxAppCallDevice => _receive_ur::<HpxAppCallDevice>(ur, ur_type, decoder),
         QRCodeType::URTypeUnKnown | QRCodeType::SeedSignerMessage => URParseMultiResult::from(
             URError::NotSupportURTypeError("UnKnown ur type".to_string()),
         ),
