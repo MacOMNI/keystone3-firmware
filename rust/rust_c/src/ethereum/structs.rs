@@ -363,6 +363,7 @@ pub struct DisplayETHTypedData {
     domain_hash: PtrString,
     message_hash: PtrString,
     safe_tx_hash: PtrString,
+    pub raw_message: PtrString,
 }
 
 impl From<TypedData> for DisplayETHTypedData {
@@ -389,6 +390,7 @@ impl From<TypedData> for DisplayETHTypedData {
             domain_hash: to_ptr_string(message.domain_separator),
             message_hash: to_ptr_string(message.message_hash),
             safe_tx_hash: to_ptr_string(safe_tx_hash),
+            raw_message: null_mut(),
         }
     }
 }
@@ -408,6 +410,7 @@ impl Free for DisplayETHTypedData {
         free_str_ptr!(self.domain_hash);
         free_str_ptr!(self.message_hash);
         free_str_ptr!(self.safe_tx_hash);
+        free_str_ptr!(self.raw_message);
     }
 }
 

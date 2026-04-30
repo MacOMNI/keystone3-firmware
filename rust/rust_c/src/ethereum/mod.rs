@@ -580,7 +580,17 @@ pub unsafe extern "C" fn eth_parse_typed_data(
             let tx = parse_typed_data_message(&crypto_eth.get_sign_data(), pubkey);
             match tx {
                 Ok(t) => {
-                    TransactionParseResult::success(DisplayETHTypedData::from(t).c_ptr()).c_ptr()
+                    let mut typed_data = DisplayETHTypedData::from(t.clone());
+                    match String::from_utf8(crypto_eth.get_sign_data()) {
+                        Ok(message) => {
+                            typed_data.raw_message = convert_c_char(message);
+                            TransactionParseResult::success(typed_data.c_ptr()).c_ptr()
+                        }
+                        Err(e) => TransactionParseResult::from(EthereumError::InvalidUtf8Error(
+                            e.to_string(),
+                        ))
+                        .c_ptr(),
+                    }
                 }
                 Err(e) => TransactionParseResult::from(e).c_ptr(),
             }
