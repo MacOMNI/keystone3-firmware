@@ -8,7 +8,7 @@ use ur_registry::crypto_key_path::{CryptoKeyPath, PathComponent};
 use ur_registry::error::{URError, URResult};
 use ur_registry::extend::crypto_multi_accounts::CryptoMultiAccounts;
 
-pub const DEVICE_TYPE: &str = "keystone 3";
+pub const DEVICE_TYPE: &str = "Sealer2100";
 
 pub fn get_origin(
     master_fingerprint: &[u8; 4],

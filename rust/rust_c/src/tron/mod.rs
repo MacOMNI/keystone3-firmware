@@ -9,7 +9,9 @@ use crate::common::utils::{convert_c_char, recover_c_char};
 use crate::extract_array;
 use alloc::boxed::Box;
 use alloc::slice;
+use alloc::vec;
 use cty::c_char;
+use hex;
 use structs::DisplayTron;
 
 #[no_mangle]
@@ -90,4 +92,102 @@ pub unsafe extern "C" fn tron_get_address(
         Ok(result) => SimpleResponse::success(convert_c_char(result) as *mut c_char).simple_c_ptr(),
         Err(e) => SimpleResponse::from(e).simple_c_ptr(),
     }
+}
+#[no_mangle]
+pub unsafe extern "C" fn tron_parse_keystone_raw(
+    ptr: PtrUR,
+    ur_type: QRCodeType,
+) -> *mut SimpleResponse<c_char> {
+    keystone::build_payload(ptr, ur_type).map_or_else(
+        |e| {
+            return SimpleResponse::from(e).simple_c_ptr();
+        },
+        |payload| {
+            app_tron::get_wrapped_tron_tx(payload).map_or_else(
+                |e| SimpleResponse::from(e).simple_c_ptr(),
+                |res| {
+                    let tx_bytes = match res.raw_tx_bytes() {
+                        Ok(bytes) => {
+                            return SimpleResponse::success(
+                                convert_c_char(hex::encode(bytes)) as *mut c_char
+                            )
+                            .simple_c_ptr();
+                        }
+                        Err(e) => {
+                            return SimpleResponse::from(e).simple_c_ptr();
+                        }
+                    };
+                },
+            )
+        },
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tron_parse_keystone_path(
+    ptr: PtrUR,
+    ur_type: QRCodeType,
+) -> *mut SimpleResponse<c_char> {
+    keystone::build_payload(ptr, ur_type).map_or_else(
+        |e| {
+            return SimpleResponse::from(e).simple_c_ptr();
+        },
+        |payload| {
+            app_tron::get_wrapped_tron_tx(payload).map_or_else(
+                |e| {
+                    return SimpleResponse::from(e).simple_c_ptr();
+                },
+                |res| {
+                    SimpleResponse::success(convert_c_char(res.hd_path) as *mut c_char)
+                        .simple_c_ptr()
+                },
+            )
+        },
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tron_encode_signature(
+    ptr: PtrUR,
+    ur_type: QRCodeType,
+    signature: PtrBytes,
+    signature_len: u32,
+) -> PtrT<UREncodeResult> {
+    keystone::build_payload(ptr, ur_type).map_or_else(
+        |e| {
+            return UREncodeResult::from(e).c_ptr();
+        },
+        |payload| {
+            let payload_clone = payload.clone();
+            app_tron::get_wrapped_tron_tx(payload).map_or_else(
+                |e| {
+                    return UREncodeResult::from(e).c_ptr();
+                },
+                |mut wrapped_tron| {
+                    let signature =
+                        unsafe { slice::from_raw_parts(signature, signature_len as usize) };
+                    let count: usize = wrapped_tron
+                        .tron_tx
+                        .raw_data
+                        .as_ref()
+                        .map_or(0, |raw_data| raw_data.contract.len());
+                    wrapped_tron.tron_tx.signature = vec![signature.to_vec(); count];
+                    let tx_raw = hex::encode(wrapped_tron.encode_to_vec());
+                    let tx_id = match wrapped_tron.signature_hash() {
+                        Ok(hash) => hex::encode(hash),
+                        Err(e) => {
+                            return UREncodeResult::from(e).c_ptr();
+                        }
+                    };
+
+                    return keystone::build_sign_result_with_raw(
+                        payload_clone,
+                        tx_raw,
+                        tx_id,
+                        0x100,
+                    );
+                },
+            )
+        },
+    )
 }

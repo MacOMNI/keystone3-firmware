@@ -17,19 +17,19 @@ pub mod bitget;
 pub mod blue_wallet;
 mod common;
 pub mod core_wallet;
+pub mod hpx;
 pub mod keplr;
 pub mod keystone_connect;
 pub mod metamask;
 pub mod okx;
 pub mod thor_wallet;
 pub mod tonkeeper;
-pub mod hpx;
 mod utils;
 pub mod xrp_toolkit;
 pub mod zcash;
 //TODO: get these value from device
-pub const DEVICE_TYPE: &str = "Keystone 3 Pro";
-pub const DESCRIPTION: &str = "keystone qrcode";
+pub const DEVICE_TYPE: &str = "Sealer2100";
+pub const DESCRIPTION: &str = "HyperMate qrcode";
 
 pub use utils::generate_crypto_multi_accounts_sync_ur;
 
