@@ -15,10 +15,13 @@ use super::utils::normalize_xpub;
 pub unsafe extern "C" fn get_hpx_wallet_ur(
     master_fingerprint: PtrBytes,
     master_fingerprint_length: u32,
-    serial_number: PtrString,
+    device_id: PtrString,
     public_keys: Ptr<CSliceFFI<ExtendedPublicKey>>,
     device_type: PtrString,
     device_version: PtrString,
+    device_label: PtrString,
+    device_sn: PtrString,
+    passphrase_enabled: bool,
 ) -> Ptr<UREncodeResult> {
     if master_fingerprint_length != 4 {
         return UREncodeResult::from(URError::UrEncodeError(format!(
@@ -34,26 +37,34 @@ pub unsafe extern "C" fn get_hpx_wallet_ur(
     };
     unsafe {
         let keys = recover_c_array(public_keys);
-        let serial_number = recover_c_char(serial_number);
+        let device_id = recover_c_char(device_id);
         let device_version = recover_c_char(device_version);
         let device_type = recover_c_char(device_type);
+        let device_label = recover_c_char(device_label);
+        let device_sn = recover_c_char(device_sn);
+        let passphrase_enabled = passphrase_enabled;
         match normalize_xpub(keys) {
             Ok(_keys) => {
                 match app_wallets::hpx::generate_crypto_multi_accounts(
                     mfp,
-                    &serial_number,
+                    &device_id,
                     _keys,
                     &device_type,
                     &device_version,
                 ) {
-                    Ok(data) => match data.try_into() {
-                        Ok(_v) => UREncodeResult::encode(
-                            _v,
-                            CryptoMultiAccounts::get_registry_type().get_type(),
-                            FRAGMENT_MAX_LENGTH_DEFAULT,
-                        )
-                        .c_ptr(),
-                        Err(_e) => UREncodeResult::from(_e).c_ptr(),
+                    Ok(mut data) => {
+                        data.set_device_label(device_label);
+                        data.set_device_sn(device_sn);
+                        data.set_passphrase_enabled(passphrase_enabled);
+                        match data.try_into() {
+                            Ok(_v) => UREncodeResult::encode(
+                                _v,
+                                CryptoMultiAccounts::get_registry_type().get_type(),
+                                FRAGMENT_MAX_LENGTH_DEFAULT,
+                            )
+                            .c_ptr(),
+                            Err(_e) => UREncodeResult::from(_e).c_ptr(),
+                        }
                     },
                     Err(_e) => UREncodeResult::from(_e).c_ptr(),
                 }
